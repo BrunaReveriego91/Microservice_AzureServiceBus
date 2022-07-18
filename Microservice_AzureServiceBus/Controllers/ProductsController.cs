@@ -20,11 +20,31 @@ namespace Microservice_AzureServiceBus.Controllers
             connectionString = this._config.GetValue<string>("AzureServiceBus");
         }
 
-        [HttpPost]
+        [HttpPost("queue")]
         public async Task<IActionResult> Post(Product product)
         {
             await SendMessageQueue(product);
             return Ok(product);
+        }
+
+
+        [HttpPost("topic")]
+        public async Task<IActionResult> PostTopic(Product product)
+        {
+            await SendMessageToTopic(product);
+            return Ok(product);
+        }
+
+        private async Task SendMessageToTopic(Product product)
+        {
+            var topicName = "stores";
+            var client = new TopicClient(connectionString, topicName);
+            string messageBody = JsonSerializer.Serialize(product);
+            var message = new Message(Encoding.UTF8.GetBytes(messageBody));
+
+            await client.SendAsync(message);
+            await client.CloseAsync();
+
         }
 
         private async Task SendMessageQueue(Product product)
